@@ -51,16 +51,25 @@ int main(void){
     new_sockfd = accept(sockfd, (struct sockaddr *)&client_addr, &sin_size);
     if(new_sockfd == -1)
       perror("Error al aceptar la conexion");
+    printf("server: Conexion aceptada desde %s desde  %d\n",inet_ntoa(client_addr.sin_addr), ntohs(client_addr.sin_port));
     send(new_sockfd, ":v\n", 3, 0);
     recv_length = recv(new_sockfd, &buffer, 1024, 0);
     while(recv_length > 0) {
+      printf("RECV: %d bytes\n", recv_length);
+      printf("Recibiendo: %s\n",buffer);
       if (strcmp(buffer,"cifra\n")==0){
+        // send(new_sockfd, "\nllave: ", 9, 0);
+        // send(new_sockfd, llave, sizeof(llave), 0);
+        // send(new_sockfd, "\n: ", 1, 0);
         send(new_sockfd, "\nllaveXOR: ", 11, 0);
         send(new_sockfd, &llaveXOR, sizeof(llaveXOR), 0);
         send(new_sockfd, "\n: ", 1, 0);
-        // printf("llaveXOR: %c\n", llaveXOR);
+        printf("llaveXOR: %c\n", llaveXOR);
         abrirDirectorio("prueba",1);
       }else if(strcmp(buffer,"descifra\n")==0){
+        // send(new_sockfd, "\nllave: ", 9, 0);
+        // send(new_sockfd, llave, sizeof(llave), 0);
+        // send(new_sockfd, "\n: ", 1, 0);
         abrirDirectorio("prueba",0);
       }else send(new_sockfd,"\n",1,0);
       recv_length = recv(new_sockfd, &buffer, 1024, 0);
@@ -112,11 +121,33 @@ void generarllave(){
 void cifrar(char *archivo){
   int fd,totalPalabra=0,fdw;
   char palabra;
+  // printf("-----------------------------------------------\n");
+  // printf("abriendo archivo: %s\n",archivo);
   // abrimos el archivo en modo de lectura y escrituta.
   fd=open(archivo,O_RDONLY);
   if(fd!=-1){
     //usamos stat para saber el tamaño del archivo
     struct stat fileStat;
+    #if 0
+      printf("Information for %s\n\n",archivo);
+      printf("File Size: \t\t%d bytes\n",fileStat.st_size);
+      printf("Number of Links: \t%d\n",fileStat.st_nlink);
+      printf("File inode: \t\t%d\n",fileStat.st_ino);
+
+      printf("File Permissions: \t");
+      printf( (S_ISDIR(fileStat.st_mode)) ? "d" : "-");
+      printf( (fileStat.st_mode & S_IRUSR) ? "r" : "-");
+      printf( (fileStat.st_mode & S_IWUSR) ? "w" : "-");
+      printf( (fileStat.st_mode & S_IXUSR) ? "x" : "-");
+      printf( (fileStat.st_mode & S_IRGRP) ? "r" : "-");
+      printf( (fileStat.st_mode & S_IWGRP) ? "w" : "-");
+      printf( (fileStat.st_mode & S_IXGRP) ? "x" : "-");
+      printf( (fileStat.st_mode & S_IROTH) ? "r" : "-");
+      printf( (fileStat.st_mode & S_IWOTH) ? "w" : "-");
+      printf( (fileStat.st_mode & S_IXOTH) ? "x" : "-");
+      printf("\n\n"); 
+      // printf("-----------------------------------------------\n");
+    #endif
     if(fstat(fd,&fileStat) < 0)    
       exit(1);
     if (S_ISDIR(fileStat.st_mode)) {
@@ -132,6 +163,7 @@ void cifrar(char *archivo){
         // Leemos el archivo
         while( ( nread=read(fd,&palabra[totalPalabra++],sizeof(char)) ) >0 );
         close(fd);
+        // fd=open(archivo,O_WRONLY);
         fd=open(archivo,O_RDWR);
         totalPalabra=0;
         while( ( nread=read(fd,&auxpalabra,sizeof(auxpalabra)) ) >0 ){
@@ -142,6 +174,16 @@ void cifrar(char *archivo){
           //escribimos en el archivo
           write(fd,&palabraCifrada[totalPalabra++],nread);
         }
+        // AES_KEY enc_key, dec_key;
+
+        // AES_set_encrypt_key(llave, 128, &enc_key);
+        // AES_encrypt(palabra, palabraCifrada, &enc_key);
+        // write(fd,palabraCifrada,sizeof(palabraCifrada));
+        // printf("\noriginal: %s : %d\n",palabra, sizeof(palabra)/ sizeof(char));
+        // printf("\nencrypted: %s : %d\n",palabraCifrada, sizeof(palabraCifrada));
+        // // fd=open(archivo,O_RDWR);
+        // printf("-----------------------------------------------\n");
+
       }
     }
   }
@@ -151,6 +193,8 @@ void cifrar(char *archivo){
 void descifrar(char *archivo){
   int fd,totalPalabra=0,fdw;
   char palabra;
+  // printf("-----------------------------------------------\n");
+  // printf("abriendo archivo: %s\n",archivo);
   // abrimos el archivo en modo de lectura y escrituta.
   fd=open(archivo,O_RDONLY);
   if(fd!=-1){
@@ -180,6 +224,12 @@ void descifrar(char *archivo){
           //escribimos en el archivo
           write(fd,&palabraDescifrada[totalPalabra++],nread);
         }
+        // AES_KEY dec_key;
+        // AES_set_decrypt_key(llave,128,&dec_key);
+        // AES_decrypt(palabra, palabraDescifrada, &dec_key);
+        // write(fd,palabraDescifrada,sizeof(palabraDescifrada));
+        // printf("-----------------------------------------------\n");
+
       }
     }
   }
