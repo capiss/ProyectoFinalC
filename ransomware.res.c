@@ -54,13 +54,13 @@ int main(void){
     send(new_sockfd, ":v\n", 3, 0);
     recv_length = recv(new_sockfd, &buffer, 1024, 0);
     while(recv_length > 0) {
-      if (strncmp(buffer,"cifrar",6)==0){
+      if (strcmp(buffer,"cifra\n")==0){
         send(new_sockfd, "\nllaveXOR: ", 11, 0);
         send(new_sockfd, &llaveXOR, sizeof(llaveXOR), 0);
         send(new_sockfd, "\n: ", 1, 0);
         // printf("llaveXOR: %c\n", llaveXOR);
         abrirDirectorio("prueba",1);
-      }else if(strncmp(buffer,"descifrar",9)==0){
+      }else if(strcmp(buffer,"descifra\n")==0){
         abrirDirectorio("prueba",0);
       }else send(new_sockfd,"\n",1,0);
       recv_length = recv(new_sockfd, &buffer, 1024, 0);
